@@ -4,6 +4,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { consumeLaunchFiles, getLaunchDir } from "@/lib/launchDir";
 import { quoteShellArg } from "@/lib/shellQuote";
@@ -89,6 +90,7 @@ import {
   hasLeaf,
   isTerminalSurfaceTarget,
   leafIds,
+  leafHasForegroundProcess,
   navigateFocusedBlocks,
   type PaneBounds,
   ptyIdForLeaf,
@@ -638,10 +640,19 @@ export default function App() {
   );
 
   const sendCd = useCallback(
-    (path: string) => {
+    async (path: string) => {
       if (activeLeafId === null) return;
       const term = terminalRefs.current.get(activeLeafId);
       if (!term) return;
+
+      const hasFg = await leafHasForegroundProcess(activeLeafId);
+      if (hasFg) {
+        toast("Directory change aborted", {
+          description: "Cannot send 'cd' while a foreground process is running.",
+        });
+        return;
+      }
+
       term.write(`cd ${quoteShellArg(path)}\r`);
       term.focus();
     },
