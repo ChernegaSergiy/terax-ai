@@ -647,8 +647,8 @@ export default function App() {
 
       const hasFg = await leafHasForegroundProcess(activeLeafId);
       if (hasFg) {
-        toast("Directory change aborted", {
-          description: "Cannot send 'cd' while a foreground process is running.",
+        toast.info("Terminal directory not synced", {
+          description: "An active process is running. Exit it to change directories.",
         });
         return;
       }
