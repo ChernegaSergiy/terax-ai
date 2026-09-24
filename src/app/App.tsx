@@ -654,7 +654,14 @@ export default function App() {
 
       if (cdRequestCounters.current.get(leafId) !== reqId) return;
 
-      if (hasFg === true || hasFg === "error") {
+      if (hasFg === "error") {
+        toast.error("Terminal directory not synced", {
+          description: "Could not check if a process is running.",
+        });
+        return;
+      }
+
+      if (hasFg === true) {
         toast.info("Terminal directory not synced", {
           description: "An active process is running. Exit it to change directories.",
         });
