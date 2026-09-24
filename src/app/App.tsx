@@ -199,6 +199,7 @@ export default function App() {
     useState<TerminalSearchController | null>(null);
   const searchInlineRef = useRef<SearchInlineHandle | null>(null);
   const terminalRefs = useRef<Map<number, TerminalPaneHandle>>(new Map());
+  const cdRequestCounters = useRef<Map<number, number>>(new Map());
   const editorRefs = useRef<Map<number, EditorPaneHandle>>(new Map());
   const previewRefs = useRef<Map<number, PreviewPaneHandle>>(new Map());
   const [activeEditorHandle, setActiveEditorHandle] =
@@ -642,11 +643,18 @@ export default function App() {
   const sendCd = useCallback(
     async (path: string) => {
       if (activeLeafId === null) return;
-      const term = terminalRefs.current.get(activeLeafId);
+      const leafId = activeLeafId;
+      const term = terminalRefs.current.get(leafId);
       if (!term) return;
 
-      const hasFg = await leafHasForegroundProcess(activeLeafId);
-      if (hasFg) {
+      const reqId = (cdRequestCounters.current.get(leafId) || 0) + 1;
+      cdRequestCounters.current.set(leafId, reqId);
+
+      const hasFg = await leafHasForegroundProcess(leafId);
+
+      if (cdRequestCounters.current.get(leafId) !== reqId) return;
+
+      if (hasFg === true || hasFg === "error") {
         toast.info("Terminal directory not synced", {
           description: "An active process is running. Exit it to change directories.",
         });
